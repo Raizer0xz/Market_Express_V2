@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="MS_seguridad" />
+        <module name="MS-eureka-server" />
+        <module name="MS-gateway" />
+      </profile>
+      <profile name="Annotation profile for MS-usuarios" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
+        </processorPath>
+        <module name="MS-pagos" />
+        <module name="MS-sucursales" />
+        <module name="MS-usuarios" />
+        <module name="MS-pedidos" />
+        <module name="MS-productos" />
+        <module name="MS-inventario" />
+        <module name="MS-carrito" />
+        <module name="MS-delivery" />
+      </profile>
+    </annotationProcessing>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="MS-carrito" options="-parameters" />
+      <module name="MS-delivery" options="-parameters" />
+      <module name="MS-eureka-server" options="-parameters" />
+      <module name="MS-gateway" options="-parameters" />
+      <module name="MS-inventario" options="-parameters" />
+      <module name="MS-pagos" options="-parameters" />
+      <module name="MS-pedidos" options="-parameters" />
+      <module name="MS-productos" options="-parameters" />
+      <module name="MS-sucursales" options="-parameters" />
+      <module name="MS-usuarios" options="-parameters" />
+      <module name="MS_seguridad" options="-parameters" />
+    </option>
+  </component>
+</project>

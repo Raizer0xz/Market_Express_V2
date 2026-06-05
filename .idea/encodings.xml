@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/MS-carrito/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/MS-delivery/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/MS-eureka-server/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/MS-gateway/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/MS-inventario/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/MS-pagos/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/MS-pedidos/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/MS-productos/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/MS-seguridad/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/MS-sucursales/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/MS-usuarios/src/main/java" charset="UTF-8" />
+  </component>
+</project>
