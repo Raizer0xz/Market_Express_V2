@@ -2,6 +2,7 @@ package com.example.MS_usuarios.controller;
 
 import com.example.MS_usuarios.model.Usuario;
 import com.example.MS_usuarios.service.ServiceUsuario;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -118,6 +119,16 @@ public class UsuarioController {
         log.warn("Intento de eliminar usuario inexistente con id: {}", id);
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Map.of("error", "Usuario no encontrado con id: " + id));
+    }
+    @PostMapping
+    public ResponseEntity<Usuario> save(@Valid @RequestBody Usuario usuario) {
+        Usuario user = serviceUsuario.save(usuario);
+
+        user.add(linkTo(methodOn(UsuarioController.class).listarTodos()).withRel("todos"));
+        user.add(linkTo(methodOn(UsuarioController.class).buscarPorId(user.getId())).withSelfRel());
+        user.add(linkTo(methodOn(UsuarioController.class).actualizarUsuario(usuario.getId(), usuario)).withRel("update"));
+        user.add(linkTo(methodOn(UsuarioController.class).eliminarUsuario(user.getId())).withRel("delete"));
+        return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
     // --- GET /api/v1/usuarios/health ---
