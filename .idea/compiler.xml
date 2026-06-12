@@ -10,7 +10,7 @@
         <module name="MS-eureka-server" />
         <module name="MS-gateway" />
       </profile>
-      <profile name="Annotation profile for MS-usuarios" enabled="true">
+      <profile name="Annotation profile for MS-pedidos" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -19,8 +19,8 @@
         </processorPath>
         <module name="MS-pagos" />
         <module name="MS-sucursales" />
-        <module name="MS-usuarios" />
         <module name="MS-pedidos" />
+        <module name="MS-usuarios" />
         <module name="MS-productos" />
         <module name="MS-inventario" />
         <module name="MS-carrito" />
