@@ -1,4 +1,4 @@
-package com.example.MS_pedidos.service;
+package com.example.MS_usuarios.service;
 
 import com.example.MS_pedidos.model.EstadoPedido;
 import com.example.MS_pedidos.model.Pedido;
@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-class PedidoServiceTest {
+class UsuariosServiceTest {
 
     @Mock
     private PedidoRepository repository;

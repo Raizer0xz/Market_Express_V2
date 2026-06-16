@@ -1,4 +1,5 @@
 package com.example.MS_pedidos.model;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -9,9 +10,11 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+// HATEOAS paso 1: importar RepresentationModel
+import org.springframework.hateoas.RepresentationModel;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
 
 @Entity
 @Table(name = "pedido")
@@ -19,7 +22,10 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Pedido {
+// HATEOAS paso 1: extender RepresentationModel<Pedido>
+// Esto le agrega un campo "_links" al JSON de respuesta donde vivirán los links
+public class Pedido extends RepresentationModel<Pedido> {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -55,5 +61,3 @@ public class Pedido {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }
-
-
