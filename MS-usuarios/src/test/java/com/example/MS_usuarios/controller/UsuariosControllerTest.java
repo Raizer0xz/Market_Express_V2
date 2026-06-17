@@ -1,8 +1,7 @@
 package com.example.MS_usuarios.controller;
 
-import com.example.MS_pedidos.model.EstadoPedido;
-import com.example.MS_pedidos.model.Pedido;
-import com.example.MS_pedidos.service.PedidoService;
+import com.example.MS_usuarios.model.Usuario;
+import com.example.MS_usuarios.service.ServiceUsuario;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -11,7 +10,6 @@ import org.springframework.hateoas.MediaTypes;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,123 +18,291 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(PedidoController.class)
-@AutoConfigureMockMvc(addFilters = false)
-class UsuariosControllerTest {
+@WebMvcTest(UsuarioController.class)
+@AutoConfigureMockMvc(addFilters = false)   // desactiva los filtros JWT/seguridad para el test
+class UsuarioControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
-    private PedidoService service;
+    private ServiceUsuario serviceUsuario;
 
-    @Test
-    void deberiaRetornarTodosLosPedidos() throws Exception {
-        Pedido pedido = new Pedido();
-        pedido.setId(1L);
-        pedido.setUsuarioId(5L);
-        pedido.setSucursalId(2L);
-        pedido.setDireccionEntrega("Av. Siempreviva 742");
-        pedido.setTotal(new BigDecimal("1550.50"));
-        pedido.setEstado(EstadoPedido.PENDIENTE);
-
-        when(service.findAll()).thenReturn(List.of(pedido));
-
-        // El controller devuelve CollectionModel (HAL JSON),
-        // los pedidos van dentro de "_embedded.pedidoList"
-        mockMvc.perform(get("/api/v1/pedidos")
-                        .accept(MediaTypes.HAL_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$._embedded.pedidoList[0].id").value(1))
-                .andExpect(jsonPath("$._embedded.pedidoList[0].estado").value("PENDIENTE"))
-                .andExpect(jsonPath("$._embedded.pedidoList[0]._links.todos.href").exists())
-                .andExpect(jsonPath("$._embedded.pedidoList[0]._links.update.href").exists())
-                .andExpect(jsonPath("$._embedded.pedidoList[0]._links.delete.href").exists())
-                .andExpect(jsonPath("$._links.self.href").exists());
-
-        verify(service).findAll();
+    // -------------------------------------------------------------------------
+    // Helper: construye un usuario de prueba
+    // -------------------------------------------------------------------------
+    private Usuario usuarioEjemplo() {
+        return Usuario.builder()
+                .id(1L)
+                .nombre("Juan Pérez")
+                .email("juan@mail.com")
+                .passwordHash("hashed123")
+                .telefono("912345678")
+                .rol("CLIENTE")
+                .build();
     }
 
+    // -------------------------------------------------------------------------
+    // GET /api/v1/usuarios → 200 con lista + HATEOAS links
+    // -------------------------------------------------------------------------
     @Test
-    void deberiaCrearPedido() throws Exception {
-        Pedido pedido = new Pedido();
-        pedido.setId(1L);
-        pedido.setUsuarioId(1L);
-        pedido.setSucursalId(10L);
-        pedido.setCarritoId(500L);
-        pedido.setEstado(EstadoPedido.PENDIENTE);
-        pedido.setTotal(new BigDecimal("1550.50"));
-        pedido.setDireccionEntrega("Av. Siempreviva 742, Springfield");
+    void deberiaRetornarTodosLosUsuarios() throws Exception {
+        when(serviceUsuario.findAll()).thenReturn(List.of(usuarioEjemplo()));
 
-        when(service.save(any(Pedido.class))).thenReturn(pedido);
+        // El controller devuelve CollectionModel (HAL JSON):
+        // los ítems van dentro de "_embedded.usuarioList"
+        mockMvc.perform(get("/api/v1/usuarios")
+                        .accept(MediaTypes.HAL_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.usuarioList[0].id").value(1))
+                .andExpect(jsonPath("$._embedded.usuarioList[0].nombre").value("Juan Pérez"))
+                .andExpect(jsonPath("$._embedded.usuarioList[0].email").value("juan@mail.com"))
+                .andExpect(jsonPath("$._embedded.usuarioList[0].rol").value("CLIENTE"))
+                // HATEOAS links en cada ítem
+                .andExpect(jsonPath("$._embedded.usuarioList[0]._links.self.href").exists())
+                .andExpect(jsonPath("$._embedded.usuarioList[0]._links.todos.href").exists())
+                .andExpect(jsonPath("$._embedded.usuarioList[0]._links.update.href").exists())
+                .andExpect(jsonPath("$._embedded.usuarioList[0]._links.delete.href").exists())
+                // link self de la colección
+                .andExpect(jsonPath("$._links.self.href").exists());
+
+        verify(serviceUsuario).findAll();
+    }
+
+    // -------------------------------------------------------------------------
+    // GET /api/v1/usuarios → 204 cuando no hay usuarios
+    // -------------------------------------------------------------------------
+    @Test
+    void deberiaRetornar204CuandoNoHayUsuarios() throws Exception {
+        when(serviceUsuario.findAll()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/v1/usuarios"))
+                .andExpect(status().isNoContent());
+
+        verify(serviceUsuario).findAll();
+    }
+
+    // -------------------------------------------------------------------------
+    // GET /api/v1/usuarios/{id} → 200 con links
+    // -------------------------------------------------------------------------
+    @Test
+    void deberiaRetornarUsuarioPorId() throws Exception {
+        when(serviceUsuario.findById(1L)).thenReturn(Optional.of(usuarioEjemplo()));
+
+        mockMvc.perform(get("/api/v1/usuarios/1")
+                        .accept(MediaTypes.HAL_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.nombre").value("Juan Pérez"))
+                .andExpect(jsonPath("$.email").value("juan@mail.com"))
+                .andExpect(jsonPath("$._links.self.href").exists())
+                .andExpect(jsonPath("$._links.todos.href").exists())
+                .andExpect(jsonPath("$._links.update.href").exists())
+                .andExpect(jsonPath("$._links.delete.href").exists());
+
+        verify(serviceUsuario).findById(1L);
+    }
+
+    // -------------------------------------------------------------------------
+    // GET /api/v1/usuarios/{id} → 404 si no existe
+    // -------------------------------------------------------------------------
+    @Test
+    void deberiaRetornar404CuandoUsuarioNoExiste() throws Exception {
+        when(serviceUsuario.findById(99L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/v1/usuarios/99"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Usuario no encontrado con id: 99"));
+
+        verify(serviceUsuario).findById(99L);
+    }
+
+    // -------------------------------------------------------------------------
+    // POST /api/v1/usuarios → 201 con links
+    // -------------------------------------------------------------------------
+    @Test
+    void deberiaCrearUsuario() throws Exception {
+        when(serviceUsuario.existsByEmail("juan@mail.com")).thenReturn(false);
+        when(serviceUsuario.save(any(Usuario.class))).thenReturn(usuarioEjemplo());
 
         String json = """
                 {
-                    "usuarioId": 1,
-                    "sucursalId": 10,
-                    "carritoId": 500,
-                    "estado": "PENDIENTE",
-                    "total": 1550.50,
-                    "direccionEntrega": "Av. Siempreviva 742, Springfield"
+                    "nombre": "Juan Pérez",
+                    "email": "juan@mail.com",
+                    "passwordHash": "hashed123",
+                    "telefono": "912345678",
+                    "rol": "CLIENTE"
                 }
                 """;
 
-        mockMvc.perform(post("/api/v1/pedidos")
+        mockMvc.perform(post("/api/v1/usuarios")
                         .contentType("application/json")
                         .accept(MediaTypes.HAL_JSON)
                         .content(json))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.usuarioId").value(1))
-                .andExpect(jsonPath("$.estado").value("PENDIENTE"))
-                .andExpect(jsonPath("$.direccionEntrega").value("Av. Siempreviva 742, Springfield"))
+                .andExpect(jsonPath("$.nombre").value("Juan Pérez"))
+                .andExpect(jsonPath("$.email").value("juan@mail.com"))
+                .andExpect(jsonPath("$.rol").value("CLIENTE"))
+                // HATEOAS links presentes en la respuesta de creación
+                .andExpect(jsonPath("$._links.self.href").exists())
                 .andExpect(jsonPath("$._links.todos.href").exists())
                 .andExpect(jsonPath("$._links.update.href").exists())
                 .andExpect(jsonPath("$._links.delete.href").exists());
 
-        verify(service).save(any(Pedido.class));
+        verify(serviceUsuario).existsByEmail("juan@mail.com");
+        verify(serviceUsuario).save(any(Usuario.class));
     }
 
+    // -------------------------------------------------------------------------
+    // POST /api/v1/usuarios → 409 si el email ya existe
+    // -------------------------------------------------------------------------
+    @Test
+    void deberiaRetornar409CuandoEmailYaExiste() throws Exception {
+        when(serviceUsuario.existsByEmail("juan@mail.com")).thenReturn(true);
+
+        String json = """
+                {
+                    "nombre": "Juan Pérez",
+                    "email": "juan@mail.com",
+                    "passwordHash": "hashed123",
+                    "rol": "CLIENTE"
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/usuarios")
+                        .contentType("application/json")
+                        .content(json))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Ya existe un usuario con ese email"));
+
+        verify(serviceUsuario).existsByEmail("juan@mail.com");
+    }
+
+    // -------------------------------------------------------------------------
+    // POST /api/v1/usuarios → 400 si faltan campos obligatorios
+    // -------------------------------------------------------------------------
     @Test
     void deberiaRetornar400CuandoFaltanCamposObligatorios() throws Exception {
         String json = """
                 {
-                    "usuarioId": 1
+                    "nombre": "Juan"
                 }
                 """;
 
-        mockMvc.perform(post("/api/v1/pedidos")
+        mockMvc.perform(post("/api/v1/usuarios")
                         .contentType("application/json")
                         .content(json))
                 .andExpect(status().isBadRequest());
     }
 
+    // -------------------------------------------------------------------------
+    // PUT /api/v1/usuarios/{id} → 200 con datos actualizados + links
+    // -------------------------------------------------------------------------
     @Test
-    void deberiaActualizarEstadoDePedido() throws Exception {
-        Pedido pedidoActualizado = new Pedido();
-        pedidoActualizado.setId(1L);
-        pedidoActualizado.setUsuarioId(1L);
-        pedidoActualizado.setSucursalId(10L);
-        pedidoActualizado.setEstado(EstadoPedido.CONFIRMADO);
-        pedidoActualizado.setTotal(new BigDecimal("1550.50"));
-        pedidoActualizado.setDireccionEntrega("Av. Siempreviva 742");
+    void deberiaActualizarUsuario() throws Exception {
+        Usuario usuarioActualizado = Usuario.builder()
+                .id(1L)
+                .nombre("Juan Actualizado")
+                .email("juan.nuevo@mail.com")
+                .passwordHash("hashed123")
+                .telefono("999999999")
+                .rol("ADMIN")
+                .build();
 
-        when(service.update(eq(1L), eq(EstadoPedido.CONFIRMADO)))
-                .thenReturn(Optional.of(pedidoActualizado));
+        when(serviceUsuario.findById(1L)).thenReturn(Optional.of(usuarioEjemplo()));
+        when(serviceUsuario.save(any(Usuario.class))).thenReturn(usuarioActualizado);
 
-        mockMvc.perform(put("/api/v1/pedidos/1/estado")
-                        .param("nuevoEstado", "CONFIRMADO")
-                        .accept(MediaTypes.HAL_JSON))
+        String json = """
+                {
+                    "nombre": "Juan Actualizado",
+                    "email": "juan.nuevo@mail.com",
+                    "passwordHash": "hashed123",
+                    "telefono": "999999999",
+                    "rol": "ADMIN"
+                }
+                """;
+
+        mockMvc.perform(put("/api/v1/usuarios/1")
+                        .contentType("application/json")
+                        .accept(MediaTypes.HAL_JSON)
+                        .content(json))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.estado").value("CONFIRMADO"))
+                .andExpect(jsonPath("$.nombre").value("Juan Actualizado"))
+                .andExpect(jsonPath("$.email").value("juan.nuevo@mail.com"))
+                .andExpect(jsonPath("$.rol").value("ADMIN"))
+                .andExpect(jsonPath("$._links.self.href").exists())
                 .andExpect(jsonPath("$._links.todos.href").exists())
                 .andExpect(jsonPath("$._links.update.href").exists())
                 .andExpect(jsonPath("$._links.delete.href").exists());
 
-        verify(service).update(1L, EstadoPedido.CONFIRMADO);
+        verify(serviceUsuario).findById(1L);
+        verify(serviceUsuario).save(any(Usuario.class));
+    }
+
+    // -------------------------------------------------------------------------
+    // PUT /api/v1/usuarios/{id} → 404 si no existe
+    // -------------------------------------------------------------------------
+    @Test
+    void deberiaRetornar404AlActualizarUsuarioInexistente() throws Exception {
+        when(serviceUsuario.findById(99L)).thenReturn(Optional.empty());
+
+        String json = """
+                {
+                    "nombre": "Nadie",
+                    "email": "nadie@mail.com",
+                    "passwordHash": "hashed",
+                    "rol": "CLIENTE"
+                }
+                """;
+
+        mockMvc.perform(put("/api/v1/usuarios/99")
+                        .contentType("application/json")
+                        .content(json))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Usuario no encontrado con id: 99"));
+
+        verify(serviceUsuario).findById(99L);
+    }
+
+    // -------------------------------------------------------------------------
+    // DELETE /api/v1/usuarios/{id} → 200 eliminado correctamente
+    // -------------------------------------------------------------------------
+    @Test
+    void deberiaEliminarUsuario() throws Exception {
+        when(serviceUsuario.deleteById(1L)).thenReturn(true);
+
+        mockMvc.perform(delete("/api/v1/usuarios/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mensaje").value("Usuario eliminado correctamente"));
+
+        verify(serviceUsuario).deleteById(1L);
+    }
+
+    // -------------------------------------------------------------------------
+    // DELETE /api/v1/usuarios/{id} → 404 si no existe
+    // -------------------------------------------------------------------------
+    @Test
+    void deberiaRetornar404AlEliminarUsuarioInexistente() throws Exception {
+        when(serviceUsuario.deleteById(99L)).thenReturn(false);
+
+        mockMvc.perform(delete("/api/v1/usuarios/99"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Usuario no encontrado con id: 99"));
+
+        verify(serviceUsuario).deleteById(99L);
+    }
+
+    // -------------------------------------------------------------------------
+    // GET /api/v1/usuarios/health → 200
+    // -------------------------------------------------------------------------
+    @Test
+    void deberiaRetornarHealthOk() throws Exception {
+        mockMvc.perform(get("/api/v1/usuarios/health"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.servicio").value("ms-usuarios"))
+                .andExpect(jsonPath("$.estado").value("activo"));
     }
 }

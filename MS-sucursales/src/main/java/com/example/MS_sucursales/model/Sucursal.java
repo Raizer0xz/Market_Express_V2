@@ -3,18 +3,22 @@ package com.example.MS_sucursales.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.hateoas.RepresentationModel;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "sucursales")
-public class Sucursal {
+public class Sucursal extends RepresentationModel<Sucursal> {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -46,6 +50,7 @@ public class Sucursal {
     @Column(name = "horario_cierre")
     private String horarioCierre;
 
+    @Builder.Default
     private boolean abierta = true;
 
     @CreationTimestamp

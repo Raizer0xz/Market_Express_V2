@@ -1,107 +1,196 @@
 package com.example.MS_usuarios.service;
 
-import com.example.MS_pedidos.model.EstadoPedido;
-import com.example.MS_pedidos.model.Pedido;
-import com.example.MS_pedidos.repository.PedidoRepository;
+import com.example.MS_usuarios.model.Usuario;
+import com.example.MS_usuarios.repository.RepositoryUsuario;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
-class UsuariosServiceTest {
+@ExtendWith(MockitoExtension.class)   // Mockito puro, sin levantar Spring → test ultra rápido
+class ServiceUsuarioTest {
 
     @Mock
-    private PedidoRepository repository;
+    private RepositoryUsuario repository;
 
     @InjectMocks
-    private PedidoService service;
+    private ServiceUsuario serviceUsuario;
 
-    // FIX: El modelo Pedido usa setId() no setIdPedido(), y no tiene campo "descripcion".
-    //      PedidoService no tiene findById(), pero sí findByUsuario() y findAll().
-    //      Se reemplaza por un test que prueba findAll() y save(), que sí existen.
+    private Usuario usuario;
 
+    @BeforeEach
+    void setUp() {
+        usuario = Usuario.builder()
+                .id(1L)
+                .nombre("Juan Pérez")
+                .email("juan@mail.com")
+                .passwordHash("hashed123")
+                .telefono("912345678")
+                .rol("CLIENTE")
+                .build();
+    }
+
+    // -------------------------------------------------------------------------
+    // findAll()
+    // -------------------------------------------------------------------------
     @Test
-    void deberiaRetornarTodosLosPedidos() {
-        Pedido pedido = new Pedido();
-        pedido.setId(1L);
-        pedido.setUsuarioId(5L);
-        pedido.setSucursalId(2L);
-        pedido.setDireccionEntrega("Av. Siempreviva 742");
-        pedido.setTotal(new BigDecimal("1550.50"));
-        pedido.setEstado(EstadoPedido.PENDIENTE);
+    void findAll_deberiaRetornarListaDeUsuarios() {
+        when(repository.findAll()).thenReturn(List.of(usuario));
 
-        Mockito.when(repository.findAll())
-                .thenReturn(List.of(pedido));
+        List<Usuario> resultado = serviceUsuario.findAll();
 
-        List<Pedido> resultado = service.findAll();
-
-        assertFalse(resultado.isEmpty());
-        assertEquals(1L, resultado.get(0).getId());
-        assertEquals(EstadoPedido.PENDIENTE, resultado.get(0).getEstado());
-
+        assertThat(resultado).hasSize(1);
+        assertThat(resultado.get(0).getEmail()).isEqualTo("juan@mail.com");
         verify(repository).findAll();
     }
 
     @Test
-    void deberiaGuardarPedido() {
-        Pedido pedido = new Pedido();
-        pedido.setId(1L);
-        pedido.setUsuarioId(5L);
-        pedido.setSucursalId(2L);
-        pedido.setDireccionEntrega("Av. Siempreviva 742");
-        pedido.setTotal(new BigDecimal("1550.50"));
-        pedido.setEstado(EstadoPedido.PENDIENTE);
+    void findAll_deberiaRetornarListaVaciaCuandoNoHayUsuarios() {
+        when(repository.findAll()).thenReturn(List.of());
 
-        Mockito.when(repository.save(pedido))
-                .thenReturn(pedido);
+        List<Usuario> resultado = serviceUsuario.findAll();
 
-        Pedido resultado = service.save(pedido);
+        assertThat(resultado).isEmpty();
+        verify(repository).findAll();
+    }
 
-        assertNotNull(resultado);
-        assertEquals(1L, resultado.getId());
+    // -------------------------------------------------------------------------
+    // findById()
+    // -------------------------------------------------------------------------
+    @Test
+    void findById_deberiaRetornarUsuarioCuandoExiste() {
+        when(repository.findById(1L)).thenReturn(Optional.of(usuario));
 
-        verify(repository).save(pedido);
+        Optional<Usuario> resultado = serviceUsuario.findById(1L);
+
+        assertThat(resultado).isPresent();
+        assertThat(resultado.get().getId()).isEqualTo(1L);
+        assertThat(resultado.get().getNombre()).isEqualTo("Juan Pérez");
+        verify(repository).findById(1L);
     }
 
     @Test
-    void deberiaActualizarEstadoDePedido() {
-        Pedido pedido = new Pedido();
-        pedido.setId(1L);
-        pedido.setEstado(EstadoPedido.PENDIENTE);
-        pedido.setUsuarioId(5L);
-        pedido.setSucursalId(2L);
-        pedido.setDireccionEntrega("Av. Siempreviva 742");
-        pedido.setTotal(new BigDecimal("1550.50"));
+    void findById_deberiaRetornarVacioCuandoNoExiste() {
+        when(repository.findById(99L)).thenReturn(Optional.empty());
 
-        Mockito.when(repository.findById(1L))
-                .thenReturn(Optional.of(pedido));
+        Optional<Usuario> resultado = serviceUsuario.findById(99L);
 
-        Pedido pedidoActualizado = new Pedido();
-        pedidoActualizado.setId(1L);
-        pedidoActualizado.setEstado(EstadoPedido.CONFIRMADO);
-        pedidoActualizado.setUsuarioId(5L);
-        pedidoActualizado.setSucursalId(2L);
-        pedidoActualizado.setDireccionEntrega("Av. Siempreviva 742");
-        pedidoActualizado.setTotal(new BigDecimal("1550.50"));
+        assertThat(resultado).isEmpty();
+        verify(repository).findById(99L);
+    }
 
-        Mockito.when(repository.save(pedido))
-                .thenReturn(pedidoActualizado);
+    // -------------------------------------------------------------------------
+    // findByEmail()
+    // -------------------------------------------------------------------------
+    @Test
+    void findByEmail_deberiaRetornarUsuarioCuandoExiste() {
+        when(repository.findByEmail("juan@mail.com")).thenReturn(Optional.of(usuario));
 
-        Optional<Pedido> resultado = service.update(1L, EstadoPedido.CONFIRMADO);
+        Optional<Usuario> resultado = serviceUsuario.findByEmail("juan@mail.com");
 
-        assertTrue(resultado.isPresent());
-        assertEquals(EstadoPedido.CONFIRMADO, resultado.get().getEstado());
+        assertThat(resultado).isPresent();
+        assertThat(resultado.get().getEmail()).isEqualTo("juan@mail.com");
+        verify(repository).findByEmail("juan@mail.com");
+    }
 
+    @Test
+    void findByEmail_deberiaRetornarVacioCuandoNoExiste() {
+        when(repository.findByEmail("noexiste@mail.com")).thenReturn(Optional.empty());
+
+        Optional<Usuario> resultado = serviceUsuario.findByEmail("noexiste@mail.com");
+
+        assertThat(resultado).isEmpty();
+        verify(repository).findByEmail("noexiste@mail.com");
+    }
+
+    // -------------------------------------------------------------------------
+    // findByRol()
+    // -------------------------------------------------------------------------
+    @Test
+    void findByRol_deberiaRetornarUsuariosConEseRol() {
+        Usuario admin = Usuario.builder()
+                .id(2L).nombre("Admin").email("admin@mail.com")
+                .passwordHash("h").rol("ADMIN").build();
+
+        when(repository.findByRol("ADMIN")).thenReturn(List.of(admin));
+
+        List<Usuario> resultado = serviceUsuario.findByRol("ADMIN");
+
+        assertThat(resultado).hasSize(1);
+        assertThat(resultado.get(0).getRol()).isEqualTo("ADMIN");
+        verify(repository).findByRol("ADMIN");
+    }
+
+    // -------------------------------------------------------------------------
+    // existsByEmail()
+    // -------------------------------------------------------------------------
+    @Test
+    void existsByEmail_deberiaRetornarTrueCuandoEmailYaExiste() {
+        when(repository.existsByEmail("juan@mail.com")).thenReturn(true);
+
+        boolean existe = serviceUsuario.existsByEmail("juan@mail.com");
+
+        assertThat(existe).isTrue();
+        verify(repository).existsByEmail("juan@mail.com");
+    }
+
+    @Test
+    void existsByEmail_deberiaRetornarFalseCuandoEmailNoExiste() {
+        when(repository.existsByEmail("nuevo@mail.com")).thenReturn(false);
+
+        boolean existe = serviceUsuario.existsByEmail("nuevo@mail.com");
+
+        assertThat(existe).isFalse();
+        verify(repository).existsByEmail("nuevo@mail.com");
+    }
+
+    // -------------------------------------------------------------------------
+    // save()
+    // -------------------------------------------------------------------------
+    @Test
+    void save_deberiaGuardarYRetornarUsuario() {
+        when(repository.save(any(Usuario.class))).thenReturn(usuario);
+
+        Usuario resultado = serviceUsuario.save(usuario);
+
+        assertThat(resultado).isNotNull();
+        assertThat(resultado.getId()).isEqualTo(1L);
+        assertThat(resultado.getNombre()).isEqualTo("Juan Pérez");
+        verify(repository).save(usuario);
+    }
+
+    // -------------------------------------------------------------------------
+    // deleteById()
+    // -------------------------------------------------------------------------
+    @Test
+    void deleteById_deberiaRetornarTrueCuandoUsuarioExiste() {
+        when(repository.findById(1L)).thenReturn(Optional.of(usuario));
+        doNothing().when(repository).delete(usuario);
+
+        boolean resultado = serviceUsuario.deleteById(1L);
+
+        assertThat(resultado).isTrue();
         verify(repository).findById(1L);
+        verify(repository).delete(usuario);
+    }
+
+    @Test
+    void deleteById_deberiaRetornarFalseCuandoUsuarioNoExiste() {
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+
+        boolean resultado = serviceUsuario.deleteById(99L);
+
+        assertThat(resultado).isFalse();
+        verify(repository).findById(99L);
+        verify(repository, never()).delete(any());
     }
 }
