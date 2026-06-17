@@ -10,7 +10,17 @@
         <module name="MS-eureka-server" />
         <module name="MS-gateway" />
       </profile>
-      <profile name="Annotation profile for MS-sucursales" enabled="true">
+      <profile name="Annotation profile for MS-usuarios" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
+        </processorPath>
+        <module name="MS-usuarios" />
+      </profile>
+      <profile name="Annotation profile for MS-pagos" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -20,7 +30,6 @@
         <module name="MS-pagos" />
         <module name="MS-sucursales" />
         <module name="MS-pedidos" />
-        <module name="MS-usuarios" />
         <module name="MS-productos" />
         <module name="MS-inventario" />
         <module name="MS-carrito" />

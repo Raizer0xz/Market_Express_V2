@@ -4,19 +4,22 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.hateoas.RepresentationModel;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "precio_producto")  // minúsculas para coincidir con el SQL
+@Builder
+@Table(name = "precio_producto")
 @NoArgsConstructor
 @AllArgsConstructor
-public class PrecioProducto {
+public class PrecioProducto extends RepresentationModel<PrecioProducto> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

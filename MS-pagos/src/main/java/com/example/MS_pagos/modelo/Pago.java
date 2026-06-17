@@ -1,22 +1,21 @@
 package com.example.MS_pagos.modelo;
 
-import com.example.MS_pagos.modelo.EstadoPago;
-import com.example.MS_pagos.modelo.MetodoPago;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.hateoas.RepresentationModel;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "pagos")
-@Data // Genera getters, setters, toString, etc (requiere dependencia Lombok)
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Pago {
+public class Pago extends RepresentationModel<Pago> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,4 +45,3 @@ public class Pago {
         fechaCreacion = LocalDateTime.now();
     }
 }
-

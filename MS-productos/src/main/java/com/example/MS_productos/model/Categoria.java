@@ -4,15 +4,18 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.hateoas.RepresentationModel;
 
 @Data
 @Entity
-@Table(name = "categoria")  // minúsculas para coincidir con el SQL
+@Builder
+@Table(name = "categoria")
 @NoArgsConstructor
 @AllArgsConstructor
-public class Categoria {
+public class Categoria extends RepresentationModel<Categoria> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

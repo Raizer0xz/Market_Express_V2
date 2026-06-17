@@ -4,15 +4,18 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.hateoas.RepresentationModel;
 
 @Entity
-@Table(name = "producto")  // minúsculas para coincidir con el SQL
+@Table(name = "producto")
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Producto {
+public class Producto extends RepresentationModel<Producto> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,5 +37,6 @@ public class Producto {
     @Column(name = "unidad_medida")
     private String unidadMedida;
 
+    @Builder.Default
     private Boolean activo = true;
 }
