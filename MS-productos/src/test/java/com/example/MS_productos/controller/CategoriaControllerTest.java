@@ -1,7 +1,7 @@
 package com.example.MS_productos.controller;
 
 import com.example.MS_productos.model.Categoria;
-import com.example.MS_productos.service.CategoriaServiceTest;
+import com.example.MS_productos.service.CategoriaService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -25,8 +25,9 @@ class CategoriaControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    // FIX: era "CategoriaServiceTest" — se corrige a "CategoriaService"
     @MockitoBean
-    private CategoriaServiceTest service;
+    private CategoriaService service;
 
     private Categoria categoriaEjemplo() {
         return Categoria.builder()
@@ -37,9 +38,6 @@ class CategoriaControllerTest {
                 .build();
     }
 
-    // -------------------------------------------------------------------------
-    // GET /api/v2/categorias → 200 con lista + HATEOAS
-    // -------------------------------------------------------------------------
     @Test
     void deberiaRetornarTodasLasCategorias() throws Exception {
         when(service.listarCategorias()).thenReturn(List.of(categoriaEjemplo()));
@@ -58,9 +56,6 @@ class CategoriaControllerTest {
         verify(service).listarCategorias();
     }
 
-    // -------------------------------------------------------------------------
-    // GET /api/v2/categorias → 204 cuando no hay categorías
-    // -------------------------------------------------------------------------
     @Test
     void deberiaRetornar204CuandoNoHayCategorias() throws Exception {
         when(service.listarCategorias()).thenReturn(List.of());
@@ -71,9 +66,6 @@ class CategoriaControllerTest {
         verify(service).listarCategorias();
     }
 
-    // -------------------------------------------------------------------------
-    // GET /api/v2/categorias/{id} → 200 con links
-    // -------------------------------------------------------------------------
     @Test
     void deberiaRetornarCategoriaPorId() throws Exception {
         when(service.obtenerPorId(1L)).thenReturn(categoriaEjemplo());
@@ -91,9 +83,6 @@ class CategoriaControllerTest {
         verify(service).obtenerPorId(1L);
     }
 
-    // -------------------------------------------------------------------------
-    // GET /api/v2/categorias/{id} → 404
-    // -------------------------------------------------------------------------
     @Test
     void deberiaRetornar404CuandoCategoriaNoExiste() throws Exception {
         when(service.obtenerPorId(99L))
@@ -106,9 +95,6 @@ class CategoriaControllerTest {
         verify(service).obtenerPorId(99L);
     }
 
-    // -------------------------------------------------------------------------
-    // POST /api/v2/categorias → 201 con links
-    // -------------------------------------------------------------------------
     @Test
     void deberiaCrearCategoria() throws Exception {
         when(service.crearCategoria(any(Categoria.class))).thenReturn(categoriaEjemplo());
@@ -136,9 +122,6 @@ class CategoriaControllerTest {
         verify(service).crearCategoria(any(Categoria.class));
     }
 
-    // -------------------------------------------------------------------------
-    // POST /api/v2/categorias → 400 datos inválidos
-    // -------------------------------------------------------------------------
     @Test
     void deberiaRetornar400CuandoFaltaNombre() throws Exception {
         String json = """
@@ -155,9 +138,6 @@ class CategoriaControllerTest {
         verify(service, never()).crearCategoria(any());
     }
 
-    // -------------------------------------------------------------------------
-    // PUT /api/v2/categorias/{id} → 200 actualizado + links
-    // -------------------------------------------------------------------------
     @Test
     void deberiaActualizarCategoria() throws Exception {
         Categoria actualizada = Categoria.builder()
@@ -188,9 +168,6 @@ class CategoriaControllerTest {
         verify(service).actualizarCategoria(eq(1L), any(Categoria.class));
     }
 
-    // -------------------------------------------------------------------------
-    // PUT /api/v2/categorias/{id} → 404
-    // -------------------------------------------------------------------------
     @Test
     void deberiaRetornar404AlActualizarCategoriaInexistente() throws Exception {
         when(service.actualizarCategoria(eq(99L), any(Categoria.class)))
@@ -209,9 +186,6 @@ class CategoriaControllerTest {
                 .andExpect(jsonPath("$.error").value("Categoría no encontrada: 99"));
     }
 
-    // -------------------------------------------------------------------------
-    // DELETE /api/v2/categorias/{id} → 200
-    // -------------------------------------------------------------------------
     @Test
     void deberiaEliminarCategoria() throws Exception {
         doNothing().when(service).eliminarCategoria(1L);
@@ -223,9 +197,6 @@ class CategoriaControllerTest {
         verify(service).eliminarCategoria(1L);
     }
 
-    // -------------------------------------------------------------------------
-    // DELETE /api/v2/categorias/{id} → 400 tiene productos asociados
-    // -------------------------------------------------------------------------
     @Test
     void deberiaRetornar400AlEliminarCategoriaConProductos() throws Exception {
         doThrow(new RuntimeException("No se puede eliminar la categoría porque tiene productos asociados."))

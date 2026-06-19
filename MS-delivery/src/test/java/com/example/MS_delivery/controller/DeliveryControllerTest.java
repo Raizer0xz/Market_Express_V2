@@ -30,7 +30,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RequiredArgsConstructor
 @Tag(name = "Delivery", description = "Gestión de entregas: asignación, ciclo de vida y seguimiento GPS")
 @SecurityRequirement(name = "bearerAuth")
-public class DeliveryController {
+public class DeliveryControllerTest {
 
     private final DeliveryService deliveryService;
 
@@ -102,7 +102,7 @@ public class DeliveryController {
             List<Delivery> lista = deliveryService.listarPorEstado(e);
             lista.forEach(this::agregarLinks);
             return ResponseEntity.ok(CollectionModel.of(lista,
-                    linkTo(methodOn(DeliveryController.class).porEstado(estado)).withSelfRel()));
+                    linkTo(methodOn(DeliveryControllerTest.class).porEstado(estado)).withSelfRel()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "Estado inválido: " + estado));
@@ -221,12 +221,12 @@ public class DeliveryController {
 
     // ── HATEOAS links ────────────────────────────────────────────────────────
     private void agregarLinks(Delivery delivery) {
-        delivery.add(linkTo(methodOn(DeliveryController.class).obtener(delivery.getId())).withSelfRel());
-        delivery.add(linkTo(methodOn(DeliveryController.class).ruta(delivery.getId())).withRel("ruta"));
-        delivery.add(linkTo(methodOn(DeliveryController.class)
+        delivery.add(linkTo(methodOn(DeliveryControllerTest.class).obtener(delivery.getId())).withSelfRel());
+        delivery.add(linkTo(methodOn(DeliveryControllerTest.class).ruta(delivery.getId())).withRel("ruta"));
+        delivery.add(linkTo(methodOn(DeliveryControllerTest.class)
                 .obtenerPorPedido(delivery.getPedidoId())).withRel("pedido"));
         if (delivery.getRepartidor() != null) {
-            delivery.add(linkTo(methodOn(DeliveryController.class)
+            delivery.add(linkTo(methodOn(DeliveryControllerTest.class)
                     .historial(delivery.getRepartidor().getId())).withRel("historial-repartidor"));
         }
     }

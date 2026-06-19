@@ -2,7 +2,7 @@ package com.example.MS_productos.controller;
 
 import com.example.MS_productos.model.Categoria;
 import com.example.MS_productos.model.Producto;
-import com.example.MS_productos.service.ProductoServiceTest;
+import com.example.MS_productos.service.ProductoService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -26,8 +26,9 @@ class ProductoControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    // FIX: era "ProductoServiceTest" — se corrige a "ProductoService"
     @MockitoBean
-    private ProductoServiceTest service;
+    private ProductoService service;
 
     private Categoria categoriaEjemplo() {
         return Categoria.builder()
@@ -48,9 +49,6 @@ class ProductoControllerTest {
                 .build();
     }
 
-    // -------------------------------------------------------------------------
-    // GET /api/v2/productos → 200 con lista + HATEOAS
-    // -------------------------------------------------------------------------
     @Test
     void deberiaRetornarTodosLosProductosActivos() throws Exception {
         when(service.listarProductos()).thenReturn(List.of(productoEjemplo()));
@@ -69,9 +67,6 @@ class ProductoControllerTest {
         verify(service).listarProductos();
     }
 
-    // -------------------------------------------------------------------------
-    // GET /api/v2/productos → 204 cuando no hay productos
-    // -------------------------------------------------------------------------
     @Test
     void deberiaRetornar204CuandoNoHayProductos() throws Exception {
         when(service.listarProductos()).thenReturn(List.of());
@@ -82,9 +77,6 @@ class ProductoControllerTest {
         verify(service).listarProductos();
     }
 
-    // -------------------------------------------------------------------------
-    // GET /api/v2/productos/{id} → 200 con links
-    // -------------------------------------------------------------------------
     @Test
     void deberiaRetornarProductoPorId() throws Exception {
         when(service.obtenerPorId(1L)).thenReturn(productoEjemplo());
@@ -103,9 +95,6 @@ class ProductoControllerTest {
         verify(service).obtenerPorId(1L);
     }
 
-    // -------------------------------------------------------------------------
-    // GET /api/v2/productos/{id} → 404
-    // -------------------------------------------------------------------------
     @Test
     void deberiaRetornar404CuandoProductoNoExiste() throws Exception {
         when(service.obtenerPorId(99L))
@@ -118,9 +107,6 @@ class ProductoControllerTest {
         verify(service).obtenerPorId(99L);
     }
 
-    // -------------------------------------------------------------------------
-    // GET /api/v2/productos/categoria/{catId} → 200
-    // -------------------------------------------------------------------------
     @Test
     void deberiaRetornarProductosPorCategoria() throws Exception {
         when(service.listarPorCategoria(1L)).thenReturn(List.of(productoEjemplo()));
@@ -135,9 +121,6 @@ class ProductoControllerTest {
         verify(service).listarPorCategoria(1L);
     }
 
-    // -------------------------------------------------------------------------
-    // GET /api/v2/productos/categoria/{catId} → 404 categoría no existe
-    // -------------------------------------------------------------------------
     @Test
     void deberiaRetornar404CuandoCategoriaNoExiste() throws Exception {
         when(service.listarPorCategoria(99L))
@@ -150,9 +133,6 @@ class ProductoControllerTest {
         verify(service).listarPorCategoria(99L);
     }
 
-    // -------------------------------------------------------------------------
-    // GET /api/v2/productos/buscar?nombre=X → 200
-    // -------------------------------------------------------------------------
     @Test
     void deberiaBuscarProductosPorNombre() throws Exception {
         when(service.buscarPorNombre("leche")).thenReturn(List.of(productoEjemplo()));
@@ -168,9 +148,6 @@ class ProductoControllerTest {
         verify(service).buscarPorNombre("leche");
     }
 
-    // -------------------------------------------------------------------------
-    // POST /api/v2/productos → 201 con links
-    // -------------------------------------------------------------------------
     @Test
     void deberiaCrearProducto() throws Exception {
         when(service.crearProducto(any(Producto.class))).thenReturn(productoEjemplo());
@@ -199,9 +176,6 @@ class ProductoControllerTest {
         verify(service).crearProducto(any(Producto.class));
     }
 
-    // -------------------------------------------------------------------------
-    // POST /api/v2/productos → 400 datos inválidos
-    // -------------------------------------------------------------------------
     @Test
     void deberiaRetornar400CuandoFaltanCamposObligatorios() throws Exception {
         String json = """
@@ -218,9 +192,6 @@ class ProductoControllerTest {
         verify(service, never()).crearProducto(any());
     }
 
-    // -------------------------------------------------------------------------
-    // PUT /api/v2/productos/{id} → 200 actualizado + links
-    // -------------------------------------------------------------------------
     @Test
     void deberiaActualizarProducto() throws Exception {
         Producto actualizado = Producto.builder()
@@ -256,9 +227,6 @@ class ProductoControllerTest {
         verify(service).actualizarProducto(eq(1L), any(Producto.class));
     }
 
-    // -------------------------------------------------------------------------
-    // PUT /api/v2/productos/{id} → 404
-    // -------------------------------------------------------------------------
     @Test
     void deberiaRetornar404AlActualizarProductoInexistente() throws Exception {
         when(service.actualizarProducto(eq(99L), any(Producto.class)))
@@ -278,9 +246,6 @@ class ProductoControllerTest {
                 .andExpect(jsonPath("$.error").value("Producto no encontrado: 99"));
     }
 
-    // -------------------------------------------------------------------------
-    // DELETE /api/v2/productos/{id} → 200 desactivado
-    // -------------------------------------------------------------------------
     @Test
     void deberiaDesactivarProducto() throws Exception {
         doNothing().when(service).desactivarProducto(1L);
@@ -292,9 +257,6 @@ class ProductoControllerTest {
         verify(service).desactivarProducto(1L);
     }
 
-    // -------------------------------------------------------------------------
-    // DELETE /api/v2/productos/{id} → 404
-    // -------------------------------------------------------------------------
     @Test
     void deberiaRetornar404AlDesactivarProductoInexistente() throws Exception {
         doThrow(new RuntimeException("Producto no encontrado: 99"))

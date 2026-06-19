@@ -18,24 +18,27 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
         </processorPath>
+        <module name="MS-sucursales" />
         <module name="MS-usuarios" />
       </profile>
-      <profile name="Annotation profile for MS-pagos" enabled="true">
+      <profile name="Annotation profile for MS-delivery" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
         </processorPath>
-        <module name="MS-pagos" />
-        <module name="MS-sucursales" />
-        <module name="MS-pedidos" />
-        <module name="MS-productos" />
         <module name="MS-inventario" />
         <module name="MS-carrito" />
+        <module name="MS-pagos" />
         <module name="MS-delivery" />
+        <module name="MS-pedidos" />
+        <module name="MS-productos" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="MS_gateway_security" target="21" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
@@ -49,6 +52,7 @@
       <module name="MS-productos" options="-parameters" />
       <module name="MS-sucursales" options="-parameters" />
       <module name="MS-usuarios" options="-parameters" />
+      <module name="MS_gateway_security" options="-parameters" />
       <module name="MS_seguridad" options="-parameters" />
     </option>
   </component>
