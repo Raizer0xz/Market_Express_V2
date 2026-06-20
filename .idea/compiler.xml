@@ -18,22 +18,22 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
         </processorPath>
-        <module name="MS-sucursales" />
         <module name="MS-usuarios" />
       </profile>
-      <profile name="Annotation profile for MS-delivery" enabled="true">
+      <profile name="Annotation profile for MS-carrito" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
         </processorPath>
-        <module name="MS-inventario" />
-        <module name="MS-carrito" />
         <module name="MS-pagos" />
-        <module name="MS-delivery" />
+        <module name="MS-sucursales" />
         <module name="MS-pedidos" />
         <module name="MS-productos" />
+        <module name="MS-carrito" />
+        <module name="MS-inventario" />
+        <module name="MS-delivery" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>

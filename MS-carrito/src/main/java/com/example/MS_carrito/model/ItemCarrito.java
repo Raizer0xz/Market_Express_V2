@@ -4,25 +4,26 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
+import org.springframework.hateoas.RepresentationModel;
+
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "ITEM_CARRITO")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ItemCarrito {
+public class ItemCarrito extends RepresentationModel<ItemCarrito> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Relación N:1 — muchos ítems pertenecen a un carrito
     @ManyToOne
     @JoinColumn(name = "carrito_id", nullable = false)
     private Carrito carrito;
 
-    // FK a ms-productos — solo guardamos el ID
     @Column(name = "producto_id", nullable = false)
     private Long productoId;
 
