@@ -3,7 +3,7 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/MS-carrito/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/MS-delivery/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/MS-eureka-server/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/MS-eureka-server/src/main/java" charset="ISO-8859-1" />
     <file url="file://$PROJECT_DIR$/MS-gateway/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/MS-inventario/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/MS-pagos/src/main/java" charset="UTF-8" />

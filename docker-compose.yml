@@ -1,154 +1,243 @@
 services:
 
-  # =========================================================
-  # EUREKA SERVER — Puerto 8761
-  # =========================================================
+  # ─── Base de datos MySQL ───────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - market-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Eureka Server ────────────────────────────────────────────────
   eureka-server:
-    build: ./MS-eureka-server
+    build:
+      context: ./MS-eureka-server
+      dockerfile: dockerfile
     container_name: eureka-server
     ports:
       - "8761:8761"
-
-  # =========================================================
-  # MS-SEGURIDAD — Puerto 8082
-  # =========================================================
-  MS-seguridad:
-    build: ./MS_gateway_security
-    container_name: MS-seguridad
-    ports:
-      - "8082:8082"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-    depends_on:
-      - eureka-server
+    networks:
+      - market-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
 
-  # =========================================================
-  # MS-USUARIOS — Puerto 8084
-  # =========================================================
-  MS-usuarios:
-    build: ./MS-usuarios
-    container_name: MS-usuarios
-    ports:
-      - "8084:8084"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-    depends_on:
-      - eureka-server
-
-  # =========================================================
-  # MS-SUCURSALES — Puerto 8087
-  # =========================================================
-  MS-sucursales:
-    build: ./MS-sucursales
-    container_name: MS-sucursales
-    ports:
-      - "8087:8087"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-    depends_on:
-      - eureka-server
-
-  # =========================================================
-  # MS-PRODUCTOS — Puerto 8085
-  # =========================================================
-  MS-productos:
-    build: ./MS-productos
-    container_name: MS-productos
-    ports:
-      - "8085:8085"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-    depends_on:
-      - eureka-server
-
-  # =========================================================
-  # MS-CARRITO — Puerto 8086
-  # =========================================================
-  MS-carrito:
-    build: ./MS-carrito
-    container_name: MS-carrito
-    ports:
-      - "8086:8086"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-    depends_on:
-      - eureka-server
-      - MS-productos
-
-  # =========================================================
-  # MS-PEDIDOS — Puerto 8088
-  # =========================================================
-  MS-pedidos:
-    build: ./MS-pedidos
-    container_name: MS-pedidos
-    ports:
-      - "8088:8088"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-    depends_on:
-      - eureka-server
-      - MS-carrito
-
-  # =========================================================
-  # MS-PAGOS — Puerto 9091
-  # =========================================================
-  MS-pagos:
-    build: ./MS-pagos
-    container_name: MS-pagos
-    ports:
-      - "9091:9091"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-    depends_on:
-      - eureka-server
-      - MS-pedidos
-
-  # =========================================================
-  # MS-INVENTARIO — Puerto 8089
-  # =========================================================
-  MS-inventario:
-    build: ./MS-inventario
-    container_name: MS-inventario
-    ports:
-      - "8089:8089"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-    depends_on:
-      - eureka-server
-      - MS-productos
-
-  # =========================================================
-  # MS-DELIVERY — Puerto 9090
-  # =========================================================
-  MS-delivery:
-    build: ./MS-delivery
-    container_name: MS-delivery
-    ports:
-      - "9090:9090"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-    depends_on:
-      - eureka-server
-      - MS-pedidos
-
-  # =========================================================
-  # MS-GATEWAY — Puerto 5050
-  # =========================================================
-  MS-gateway:
-    build: ./MS-gateway
-    container_name: MS-gateway
+  # ─── Gateway ──────────────────────────────────────────────────────
+  ms-gateway:
+    build:
+      context: ./MS-gateway
+      dockerfile: dockerfile
+    container_name: ms-gateway
     ports:
       - "5050:5050"
     environment:
       SPRING_PROFILES_ACTIVE: docker
     depends_on:
-      - eureka-server
-      - MS-seguridad
-      - MS-usuarios
-      - MS-sucursales
-      - MS-productos
-      - MS-carrito
-      - MS-pedidos
-      - MS-pagos
-      - MS-inventario
-      - MS-delivery
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - market-net
+
+  # ─── Gateway Security ─────────────────────────────────────────────
+  ms-gateway-security:
+    build:
+      context: ./MS_gateway_security
+      dockerfile: dockerfile
+    container_name: ms-gateway-security
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - market-net
+
+  # ─── MS Usuarios ──────────────────────────────────────────────────
+  ms-usuarios:
+    build:
+      context: ./MS-usuarios
+      dockerfile: dockerfile
+    container_name: ms-usuarios
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - market-net
+
+  # ─── MS Productos ─────────────────────────────────────────────────
+  ms-productos:
+    build:
+      context: ./MS-productos
+      dockerfile: dockerfile
+    container_name: ms-productos
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - market-net
+
+  # ─── MS Carrito ───────────────────────────────────────────────────
+  ms-carrito:
+    build:
+      context: ./MS-carrito
+      dockerfile: dockerfile
+    container_name: ms-carrito
+    ports:
+      - "8086:8086"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - market-net
+
+  # ─── MS Sucursales ────────────────────────────────────────────────
+  ms-sucursales:
+    build:
+      context: ./MS-sucursales
+      dockerfile: dockerfile
+    container_name: ms-sucursales
+    ports:
+      - "8087:8087"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - market-net
+
+  # ─── MS Pedidos ───────────────────────────────────────────────────
+  ms-pedidos:
+    build:
+      context: ./MS-pedidos
+      dockerfile: dockerfile
+    container_name: ms-pedidos
+    ports:
+      - "8088:8088"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - market-net
+
+  # ─── MS Inventario ────────────────────────────────────────────────
+  ms-inventario:
+    build:
+      context: ./MS-inventario
+      dockerfile: dockerfile
+    container_name: ms-inventario
+    ports:
+      - "8089:8089"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - market-net
+
+  # ─── MS Pagos ─────────────────────────────────────────────────────
+  ms-pagos:
+    build:
+      context: ./MS-pagos
+      dockerfile: dockerfile
+    container_name: ms-pagos
+    ports:
+      - "9091:9091"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - market-net
+
+  # ─── MS Delivery ──────────────────────────────────────────────────
+  ms-delivery:
+    build:
+      context: ./MS-delivery
+      dockerfile: dockerfile
+    container_name: ms-delivery
+    ports:
+      - "9090:9090"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - market-net
+
+networks:
+  market-net:
+    driver: bridge
+
+volumes:
+  mysql_data:
