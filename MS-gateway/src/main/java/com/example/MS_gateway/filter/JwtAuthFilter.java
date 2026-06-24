@@ -47,11 +47,11 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
             String token = authHeader.substring(7);
 
             try {
-                Claims claims = Jwts.parserBuilder()
-                        .setSigningKey(getKey())
+                Claims claims = Jwts.parser()
+                        .verifyWith(getKey())
                         .build()
-                        .parseClaimsJws(token)
-                        .getBody();
+                        .parseSignedClaims(token)
+                        .getPayload();
 
                 String rol = claims.get("rol", String.class);
 
