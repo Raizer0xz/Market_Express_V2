@@ -22,12 +22,15 @@ public class PagoService {
     private final PagoRepository pagoRepository;
 
     @Transactional
-    public Pago procesarPago(PagoRequest request) {
+    public Pago procesarPago(PagoRequest request, String rol) {
+        // REGLA DE NEGOCIO: solo CLIENTE o ADMIN pueden crear pagos
+        if (!rol.equals("CLIENTE") && !rol.equals("ADMIN")) {
+            throw new SecurityException("Solo clientes o administradores pueden crear pagos");
+        }
+
         log.info("Iniciando procesamiento de pago para pedido: {} | monto: {} | metodo: {}",
                 request.getPedidoId(), request.getMonto(), request.getMetodo());
 
-        // FIX: MetodoPago.valueOf() puede lanzar IllegalArgumentException si el valor
-        // no existe en el enum. Se captura y relanza con mensaje claro.
         MetodoPago metodoPago;
         try {
             metodoPago = MetodoPago.valueOf(request.getMetodo().toUpperCase());
@@ -41,7 +44,7 @@ public class PagoService {
 
         Pago pago = Pago.builder()
                 .pedidoId(request.getPedidoId())
-                .monto(request.getMonto().doubleValue()) // compatibilidad con entidad actual
+                .monto(request.getMonto().doubleValue())
                 .moneda(request.getMoneda() != null ? request.getMoneda() : "CLP")
                 .metodo(metodoPago)
                 .estado(EstadoPago.PROCESANDO)
@@ -66,7 +69,12 @@ public class PagoService {
     }
 
     @Transactional
-    public Pago confirmarTransaccion(String transaccionId, String status) {
+    public Pago confirmarTransaccion(String transaccionId, String status, String rol) {
+        // REGLA DE NEGOCIO: solo ADMIN puede confirmar transacciones
+        if (!rol.equals("ADMIN")) {
+            throw new SecurityException("Solo administradores pueden confirmar pagos");
+        }
+
         log.info("Confirmando transaccion: {} con status: {}", transaccionId, status);
         Pago pago = pagoRepository.findByTransaccionId(transaccionId)
                 .orElseThrow(() -> {

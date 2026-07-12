@@ -1,9 +1,13 @@
-FROM eclipse-temurin:21-jre
-
+# Etapa 1: compilacion con Maven
+FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN ./mvnw clean package -DskipTests 2>/dev/null || mvn clean package -DskipTests
 
-COPY target/*.jar app.jar
-
+# Etapa 2: imagen final solo con JRE
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8086
-
 ENTRYPOINT ["java","-jar","app.jar"]

@@ -70,8 +70,6 @@ services:
         condition: service_healthy
       mysql:
         condition: service_healthy
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - market-net
 
@@ -90,8 +88,6 @@ services:
         condition: service_healthy
       mysql:
         condition: service_healthy
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - market-net
 
@@ -110,8 +106,6 @@ services:
         condition: service_healthy
       mysql:
         condition: service_healthy
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - market-net
 
@@ -130,8 +124,6 @@ services:
         condition: service_healthy
       mysql:
         condition: service_healthy
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - market-net
 
@@ -150,8 +142,6 @@ services:
         condition: service_healthy
       mysql:
         condition: service_healthy
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - market-net
 
@@ -170,8 +160,6 @@ services:
         condition: service_healthy
       mysql:
         condition: service_healthy
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - market-net
 
@@ -190,8 +178,6 @@ services:
         condition: service_healthy
       mysql:
         condition: service_healthy
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - market-net
 
@@ -210,8 +196,6 @@ services:
         condition: service_healthy
       mysql:
         condition: service_healthy
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - market-net
 
@@ -230,8 +214,6 @@ services:
         condition: service_healthy
       mysql:
         condition: service_healthy
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - market-net
 

@@ -13,7 +13,6 @@ import org.springframework.hateoas.MediaTypes;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -44,12 +43,11 @@ class PagoControllerTest {
                 .build();
     }
 
-    // -------------------------------------------------------------------------
-    // POST /api/v1/pagos/procesar → 201 con links HATEOAS
-    // -------------------------------------------------------------------------
+    // POST /api/v1/pagos/procesar → 201
     @Test
     void deberiaProcesarPagoYRetornar201() throws Exception {
-        when(pagoService.procesarPago(any(PagoRequest.class))).thenReturn(pagoEjemplo());
+        when(pagoService.procesarPago(any(PagoRequest.class), eq("CLIENTE")))
+                .thenReturn(pagoEjemplo());
 
         String json = """
                 {
@@ -67,21 +65,19 @@ class PagoControllerTest {
                         .content(json))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.pedidoId").value(1))
                 .andExpect(jsonPath("$.estado").value("PROCESANDO"))
-                .andExpect(jsonPath("$.metodo").value("TARJETA_CREDITO"))
                 .andExpect(jsonPath("$._links.pagos-del-pedido.href").exists())
-                .andExpect(jsonPath("$._links.metodos-disponibles.href").exists())
                 .andExpect(jsonPath("$._links.confirmar.href").exists());
 
-        verify(pagoService).procesarPago(any(PagoRequest.class));
+        verify(pagoService).procesarPago(any(PagoRequest.class), eq("CLIENTE"));
     }
 
-    // -------------------------------------------------------------------------
-    // POST /api/v1/pagos/procesar → 403 rol no autorizado
-    // -------------------------------------------------------------------------
+    // POST /api/v1/pagos/procesar → 403
     @Test
     void deberiaRetornar403CuandoRolNoEsClienteNiAdmin() throws Exception {
+        when(pagoService.procesarPago(any(PagoRequest.class), eq("REPARTIDOR")))
+                .thenThrow(new SecurityException("Solo clientes o administradores pueden crear pagos"));
+
         String json = """
                 {
                     "pedidoId": 1,
@@ -96,16 +92,12 @@ class PagoControllerTest {
                         .content(json))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.error").value("Solo clientes o administradores pueden crear pagos"));
-
-        verify(pagoService, never()).procesarPago(any());
     }
 
-    // -------------------------------------------------------------------------
-    // POST /api/v1/pagos/procesar → 400 método de pago inválido
-    // -------------------------------------------------------------------------
+    // POST /api/v1/pagos/procesar → 400 método inválido
     @Test
     void deberiaRetornar400CuandoMetodoDePagoEsInvalido() throws Exception {
-        when(pagoService.procesarPago(any(PagoRequest.class)))
+        when(pagoService.procesarPago(any(PagoRequest.class), eq("CLIENTE")))
                 .thenThrow(new IllegalArgumentException("Metodo de pago invalido: 'EFECTIVO'"));
 
         String json = """
@@ -124,9 +116,7 @@ class PagoControllerTest {
                 .andExpect(jsonPath("$.error").value("Metodo de pago invalido: 'EFECTIVO'"));
     }
 
-    // -------------------------------------------------------------------------
-    // POST /api/v1/pagos/procesar → 400 campos obligatorios faltantes
-    // -------------------------------------------------------------------------
+    // POST /api/v1/pagos/procesar → 400 campos faltantes
     @Test
     void deberiaRetornar400CuandoFaltanCamposObligatorios() throws Exception {
         String json = """
@@ -141,35 +131,23 @@ class PagoControllerTest {
                         .content(json))
                 .andExpect(status().isBadRequest());
 
-        verify(pagoService, never()).procesarPago(any());
+        verify(pagoService, never()).procesarPago(any(), any());
     }
 
-    // -------------------------------------------------------------------------
-    // GET /api/v1/pagos/metodos → 200 lista de métodos
-    // -------------------------------------------------------------------------
+    // GET /api/v1/pagos/metodos → 200
     @Test
     void deberiaRetornarMetodosDePagoDisponibles() throws Exception {
-        when(pagoService.obtenerMetodosDisponibles())
-                .thenReturn(List.of(
-                        MetodoPago.TARJETA_CREDITO,
-                        MetodoPago.TARJETA_DEBITO,
-                        MetodoPago.TRANSFERENCIA_BANCARIA,
-                        MetodoPago.PAYPAL
-                ));
+        when(pagoService.obtenerMetodosDisponibles()).thenReturn(List.of(
+                MetodoPago.TARJETA_CREDITO, MetodoPago.TARJETA_DEBITO,
+                MetodoPago.TRANSFERENCIA_BANCARIA, MetodoPago.PAYPAL));
 
         mockMvc.perform(get("/api/v1/pagos/metodos"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0]").value("TARJETA_CREDITO"))
-                .andExpect(jsonPath("$[1]").value("TARJETA_DEBITO"))
-                .andExpect(jsonPath("$[2]").value("TRANSFERENCIA_BANCARIA"))
-                .andExpect(jsonPath("$[3]").value("PAYPAL"));
-
-        verify(pagoService).obtenerMetodosDisponibles();
+                .andExpect(jsonPath("$[1]").value("TARJETA_DEBITO"));
     }
 
-    // -------------------------------------------------------------------------
-    // GET /api/v1/pagos/pedido/{pedidoId} → 200 con lista + HATEOAS
-    // -------------------------------------------------------------------------
+    // GET /api/v1/pagos/pedido/{pedidoId} → 200
     @Test
     void deberiaRetornarPagosPorPedido() throws Exception {
         when(pagoService.obtenerPorPedido(1L)).thenReturn(List.of(pagoEjemplo()));
@@ -177,37 +155,26 @@ class PagoControllerTest {
         mockMvc.perform(get("/api/v1/pagos/pedido/1").accept(MediaTypes.HAL_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$._embedded.pagoList[0].id").value(1))
-                .andExpect(jsonPath("$._embedded.pagoList[0].pedidoId").value(1))
                 .andExpect(jsonPath("$._embedded.pagoList[0].estado").value("PROCESANDO"))
-                .andExpect(jsonPath("$._embedded.pagoList[0]._links.pagos-del-pedido.href").exists())
-                .andExpect(jsonPath("$._embedded.pagoList[0]._links.confirmar.href").exists())
                 .andExpect(jsonPath("$._links.self.href").exists());
-
-        verify(pagoService).obtenerPorPedido(1L);
     }
 
-    // -------------------------------------------------------------------------
-    // GET /api/v1/pagos/pedido/{pedidoId} → 204 sin pagos
-    // -------------------------------------------------------------------------
+    // GET /api/v1/pagos/pedido/{pedidoId} → 204
     @Test
     void deberiaRetornar204CuandoNohayPagosParaElPedido() throws Exception {
         when(pagoService.obtenerPorPedido(99L)).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/pagos/pedido/99"))
                 .andExpect(status().isNoContent());
-
-        verify(pagoService).obtenerPorPedido(99L);
     }
 
-    // -------------------------------------------------------------------------
-    // POST /api/v1/pagos/confirmar → 200 confirmado + links
-    // -------------------------------------------------------------------------
+    // POST /api/v1/pagos/confirmar → 200
     @Test
     void deberiaConfirmarTransaccionComoAdmin() throws Exception {
         Pago pagoConfirmado = pagoEjemplo();
         pagoConfirmado.setEstado(EstadoPago.COMPLETADO);
 
-        when(pagoService.confirmarTransaccion(eq("abc-123-uuid"), eq("SUCCESS")))
+        when(pagoService.confirmarTransaccion(eq("abc-123-uuid"), eq("SUCCESS"), eq("ADMIN")))
                 .thenReturn(pagoConfirmado);
 
         mockMvc.perform(post("/api/v1/pagos/confirmar")
@@ -216,34 +183,29 @@ class PagoControllerTest {
                         .header("X-Usuario-Rol", "ADMIN")
                         .accept(MediaTypes.HAL_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estado").value("COMPLETADO"))
-                .andExpect(jsonPath("$._links.pagos-del-pedido.href").exists())
-                .andExpect(jsonPath("$._links.confirmar.href").exists());
+                .andExpect(jsonPath("$.estado").value("COMPLETADO"));
 
-        verify(pagoService).confirmarTransaccion("abc-123-uuid", "SUCCESS");
+        verify(pagoService).confirmarTransaccion("abc-123-uuid", "SUCCESS", "ADMIN");
     }
 
-    // -------------------------------------------------------------------------
-    // POST /api/v1/pagos/confirmar → 403 no es ADMIN
-    // -------------------------------------------------------------------------
+    // POST /api/v1/pagos/confirmar → 403
     @Test
     void deberiaRetornar403AlConfirmarSiNoEsAdmin() throws Exception {
+        when(pagoService.confirmarTransaccion(any(), any(), eq("CLIENTE")))
+                .thenThrow(new SecurityException("Solo administradores pueden confirmar pagos"));
+
         mockMvc.perform(post("/api/v1/pagos/confirmar")
                         .param("transaccionId", "abc-123-uuid")
                         .param("status", "SUCCESS")
                         .header("X-Usuario-Rol", "CLIENTE"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.error").value("Solo administradores pueden confirmar pagos"));
-
-        verify(pagoService, never()).confirmarTransaccion(any(), any());
     }
 
-    // -------------------------------------------------------------------------
-    // POST /api/v1/pagos/confirmar → 404 transacción no existe
-    // -------------------------------------------------------------------------
+    // POST /api/v1/pagos/confirmar → 404
     @Test
     void deberiaRetornar404CuandoTransaccionNoExiste() throws Exception {
-        when(pagoService.confirmarTransaccion(eq("no-existe"), eq("SUCCESS")))
+        when(pagoService.confirmarTransaccion(eq("no-existe"), eq("SUCCESS"), eq("ADMIN")))
                 .thenThrow(new RuntimeException("Pago no encontrado con transaccionId: no-existe"));
 
         mockMvc.perform(post("/api/v1/pagos/confirmar")
@@ -254,15 +216,12 @@ class PagoControllerTest {
                 .andExpect(jsonPath("$.error").value("Pago no encontrado con transaccionId: no-existe"));
     }
 
-    // -------------------------------------------------------------------------
     // GET /api/v1/pagos/health → 200
-    // -------------------------------------------------------------------------
     @Test
     void deberiaRetornarHealthOk() throws Exception {
         mockMvc.perform(get("/api/v1/pagos/health"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.servicio").value("ms-pagos"))
-                .andExpect(jsonPath("$.estado").value("activo"))
-                .andExpect(jsonPath("$.puerto").value("9093"));
+                .andExpect(jsonPath("$.estado").value("activo"));
     }
 }

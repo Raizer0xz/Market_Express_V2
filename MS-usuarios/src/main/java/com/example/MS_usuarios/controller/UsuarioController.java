@@ -63,18 +63,16 @@ public class UsuarioController {
     @PostMapping
     public ResponseEntity<?> crearUsuario(@Valid @RequestBody Usuario usuario) {
         log.info("Solicitud de creacion de usuario con email: {}", usuario.getEmail());
-
-        if (serviceUsuario.existsByEmail(usuario.getEmail())) {
+        try {
+            Usuario guardado = serviceUsuario.crearUsuario(usuario);
+            log.info("Usuario creado con id: {}", guardado.getId());
+            agregarLinks(guardado);
+            return ResponseEntity.status(HttpStatus.CREATED).body(guardado);
+        } catch (IllegalStateException e) {
             log.warn("Intento de registro con email duplicado: {}", usuario.getEmail());
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "Ya existe un usuario con ese email"));
+                    .body(Map.of("error", e.getMessage()));
         }
-
-        Usuario guardado = serviceUsuario.save(usuario);
-        log.info("Usuario creado con id: {}", guardado.getId());
-
-        agregarLinks(guardado);
-        return ResponseEntity.status(HttpStatus.CREATED).body(guardado);
     }
 
     // -------------------------------------------------------------------------
